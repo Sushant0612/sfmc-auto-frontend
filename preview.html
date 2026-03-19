@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Advertiser Jobs Dashboard</title>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#080a10;color:#f1f5f9;font-family:'DM Sans',sans-serif;min-height:100vh}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  input:focus{outline:none}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const jobs = [
+  { id:"64f7b783-7df1-4b99-9ed7-292f0a00bef0", name:"Advertiser Exclusions", type:"scheduled", status:"PausedSchedule", lastRunTime:"2019-09-26T22:00:33.92", key:"9fb1a028-caca-a51f-55a0-96fa5492c883", typeId:1, statusId:4, categoryId:686168, lastRunInstanceId:"35fedf76-fa89-4da8-b6b0-f89c470b92dc", schedule:{scheduleStatus:"paused"}, description:"" },
+  { id:"a1b2c3d4-e5f6-7890-abcd-ef1234567890", name:"Campaign Sync", type:"triggered", status:"Active", lastRunTime:"2024-03-15T08:30:00.00", key:"b2c3d4e5-f6a7-b890-cdef-012345678901", typeId:2, statusId:1, categoryId:686169, lastRunInstanceId:"ab12cd34-ef56-7890-abcd-ef1234567891", schedule:{scheduleStatus:"active"}, description:"Syncs campaign data nightly" },
+  { id:"b2c3d4e5-f6a7-8901-bcde-f12345678901", name:"Budget Tracker", type:"scheduled", status:"Running", lastRunTime:"2024-03-18T12:00:00.00", key:"c3d4e5f6-a7b8-c901-defa-123456789012", typeId:1, statusId:2, categoryId:686170, lastRunInstanceId:"bc23de45-fg67-8901-bcde-f12345678902", schedule:{scheduleStatus:"active"}, description:"Monitors daily budget consumption" },
+  { id:"c3d4e5f6-a7b8-9012-cdef-012345678902", name:"Audience Segment Builder", type:"manual", status:"Failed", lastRunTime:"2024-02-29T19:45:22.00", key:"d4e5f6a7-b8c9-d012-efab-234567890123", typeId:3, statusId:3, categoryId:686171, lastRunInstanceId:"cd34ef56-gh78-9012-cdef-012345678903", schedule:{scheduleStatus:"none"}, description:"Builds audience segments from CRM data" },
+  { id:"d4e5f6a7-b8c9-0123-defa-123456789013", name:"Report Generator", type:"scheduled", status:"Active", lastRunTime:"2024-03-17T06:00:00.00", key:"e5f6a7b8-c9d0-e123-fabc-345678901234", typeId:1, statusId:1, categoryId:686172, lastRunInstanceId:"de45fg67-hi89-0123-defa-123456789014", schedule:{scheduleStatus:"active"}, description:"Generates weekly performance reports" },
+];
+
+const STATUS_MAP = {
+  Active:{label:"Active",color:"#00c896",bg:"rgba(0,200,150,0.12)"},
+  Running:{label:"Running",color:"#4da6ff",bg:"rgba(77,166,255,0.12)"},
+  Failed:{label:"Failed",color:"#ff5c5c",bg:"rgba(255,92,92,0.12)"},
+  PausedSchedule:{label:"Paused",color:"#f0a500",bg:"rgba(240,165,0,0.12)"},
+};
+const TYPE_MAP = {scheduled:{icon:"⏱",color:"#a78bfa"},triggered:{icon:"⚡",color:"#60a5fa"},manual:{icon:"🖐",color:"#f472b6"}};
+
+function StatusBadge({status}){
+  const c=STATUS_MAP[status]||{label:status,color:"#aaa",bg:"rgba(170,170,170,0.1)"};
+  return <span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"4px 12px",borderRadius:999,fontSize:11,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:c.color,background:c.bg,border:`1px solid ${c.color}33`}}>
+    <span style={{width:6,height:6,borderRadius:"50%",background:c.color,boxShadow:`0 0 6px ${c.color}`,animation:status==="Running"?"pulse 1.5s ease-in-out infinite":"none"}}/>
+    {c.label}
+  </span>;
+}
+
+function TypeBadge({type}){
+  const c=TYPE_MAP[type]||{icon:"•",color:"#888"};
+  return <span style={{display:"inline-flex",alignItems:"center",gap:5,color:c.color,fontSize:12,fontWeight:500}}>
+    <span>{c.icon}</span><span style={{textTransform:"capitalize"}}>{type}</span>
+  </span>;
+}
+
+function DetailPanel({job,onClose}){
+  if(!job)return null;
+  const Row=({label,value})=><div style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
+    <span style={{fontSize:11,color:"#6b7280",textTransform:"uppercase",letterSpacing:"0.07em",fontWeight:600,minWidth:110}}>{label}</span>
+    <span style={{fontSize:11,color:"#cbd5e1",fontFamily:"monospace",wordBreak:"break-all",maxWidth:"60%",textAlign:"right"}}>{value||"—"}</span>
+  </div>;
+  return <div style={{background:"rgba(15,17,25,0.97)",border:"1px solid rgba(99,102,241,0.35)",borderRadius:14,padding:22}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+      <h3 style={{margin:0,fontSize:15,fontWeight:700,color:"#f1f5f9",fontFamily:"'DM Serif Display',serif"}}>{job.name}</h3>
+      <button onClick={onClose} style={{background:"none",border:"1px solid rgba(255,255,255,0.1)",color:"#94a3b8",borderRadius:8,padding:"3px 10px",cursor:"pointer",fontSize:18}}>×</button>
+    </div>
+    <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}><StatusBadge status={job.status}/><TypeBadge type={job.type}/></div>
+    <Row label="ID" value={job.id}/>
+    <Row label="Key" value={job.key}/>
+    <Row label="Category ID" value={job.categoryId}/>
+    <Row label="Type ID" value={job.typeId}/>
+    <Row label="Status ID" value={job.statusId}/>
+    <Row label="Last Run" value={job.lastRunTime?new Date(job.lastRunTime).toLocaleString():null}/>
+    <Row label="Instance ID" value={job.lastRunInstanceId}/>
+    <Row label="Schedule" value={job.schedule?.scheduleStatus}/>
+    {job.description&&<Row label="Description" value={job.description}/>}
+  </div>;
+}
+
+const STATUSES=["All","Active","Running","Failed","PausedSchedule"];
+const CS={padding:"13px 16px",fontSize:13,borderBottom:"1px solid rgba(255,255,255,0.05)",verticalAlign:"middle"};
+const HS={...CS,fontSize:10,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:"#6b7280",borderBottom:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.02)"};
+
+function App(){
+  const [selected,setSelected]=React.useState(null);
+  const [search,setSearch]=React.useState("");
+  const [statusFilter,setStatusFilter]=React.useState("All");
+  const [hovered,setHovered]=React.useState(null);
+
+  const filtered=jobs.filter(j=>{
+    const ms=j.name.toLowerCase().includes(search.toLowerCase())||j.id.includes(search);
+    const mf=statusFilter==="All"||j.status===statusFilter;
+    return ms&&mf;
+  });
+
+  return <div style={{minHeight:"100vh",background:"#080a10",color:"#f1f5f9",fontFamily:"'DM Sans',sans-serif",padding:"36px 28px"}}>
+    <div style={{marginBottom:28}}>
+      <div style={{fontSize:11,color:"#6366f1",textTransform:"uppercase",letterSpacing:"0.12em",fontWeight:600,marginBottom:5}}>Job Scheduler</div>
+      <h1 style={{margin:"0 0 4px",fontSize:26,fontWeight:700,fontFamily:"'DM Serif Display',serif",letterSpacing:"-0.02em"}}>Advertiser Jobs</h1>
+      <p style={{color:"#6b7280",fontSize:13}}>{filtered.length} of {jobs.length} jobs · Click a row to inspect</p>
+    </div>
+
+    <div style={{display:"flex",gap:10,marginBottom:18,flexWrap:"wrap"}}>
+      <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by name or ID…" style={{flex:"1 1 200px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"9px 14px",color:"#f1f5f9",fontSize:13,transition:"border-color 0.15s",minWidth:160}}/>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+        {STATUSES.map(s=><button key={s} onClick={()=>setStatusFilter(s)} style={{padding:"8px 13px",borderRadius:8,fontSize:12,fontWeight:500,cursor:"pointer",border:statusFilter===s?"1px solid rgba(99,102,241,0.6)":"1px solid rgba(255,255,255,0.08)",background:statusFilter===s?"rgba(99,102,241,0.15)":"rgba(255,255,255,0.04)",color:statusFilter===s?"#a5b4fc":"#9ca3af"}}>
+          {s==="PausedSchedule"?"Paused":s}
+        </button>)}
+      </div>
+    </div>
+
+    <div style={{display:"grid",gridTemplateColumns:selected?"1fr 320px":"1fr",gap:18,alignItems:"start"}}>
+      <div style={{overflowX:"auto",borderRadius:12,border:"1px solid rgba(255,255,255,0.08)"}}>
+        <table style={{width:"100%",borderCollapse:"collapse",minWidth:600}}>
+          <thead><tr>
+            <th style={HS}>ID</th><th style={HS}>Name</th><th style={HS}>Type</th><th style={HS}>Status</th><th style={HS}>Last Run</th>
+          </tr></thead>
+          <tbody>
+            {filtered.length===0?<tr><td colSpan={5} style={{textAlign:"center",padding:"48px 0",color:"#4b5563",fontSize:13}}>No jobs match your filters</td></tr>:
+            filtered.map((job,i)=>{
+              const isSel=selected?.id===job.id;
+              const isHov=hovered===job.id;
+              return <tr key={job.id}
+                onClick={()=>setSelected(isSel?null:job)}
+                onMouseEnter={()=>setHovered(job.id)}
+                onMouseLeave={()=>setHovered(null)}
+                style={{cursor:"pointer",background:isSel?"rgba(99,102,241,0.1)":isHov?"rgba(255,255,255,0.04)":i%2===0?"transparent":"rgba(255,255,255,0.015)",transition:"background 0.12s",outline:isSel?"1px solid rgba(99,102,241,0.35)":"none"}}>
+                <td style={{...CS,fontFamily:"monospace",color:"#6b7280",fontSize:11}}>{job.id.slice(0,8)}…</td>
+                <td style={{...CS,fontWeight:600,color:"#f1f5f9"}}>{job.name}</td>
+                <td style={CS}><TypeBadge type={job.type}/></td>
+                <td style={CS}><StatusBadge status={job.status}/></td>
+                <td style={{...CS,color:"#94a3b8",fontFamily:"monospace",fontSize:11}}>{job.lastRunTime?new Date(job.lastRunTime).toLocaleString():"—"}</td>
+              </tr>;
+            })}
+          </tbody>
+        </table>
+      </div>
+      {selected&&<DetailPanel job={selected} onClose={()=>setSelected(null)}/>}
+    </div>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
