@@ -20,6 +20,8 @@ body {
   font-family: 'Manrope', sans-serif;
   font-size: 14px;
   min-height: 100vh;
+  padding: 0;
+  margin: 0;
 }
 
 /* ── Shell ─────────────────────────────────── */
